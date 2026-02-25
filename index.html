@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adapty SDK iOS Integration Guide | SwiftUI</title>
+    <meta name="description" content="Complete guide for integrating Adapty SDK subscriptions with SwiftUI iOS apps. Includes Paywall Builder, purchases, and restore functionality.">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg: #0f172a;
+            --bg-secondary: #1e293b;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #22c55e;
+            --code-bg: #1e293b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg) 100%);
+            border-bottom: 1px solid var(--border);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--primary);
+            color: white;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            margin-top: 1rem;
+        }
+
+        .badge.ios {
+            background: #f97316;
+        }
+
+        nav {
+            background: var(--bg-secondary);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        section {
+            padding: 3rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        h2 .step {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            font-size: 1rem;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            margin: 2rem 0 1rem;
+            color: var(--text);
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            margin: 1.5rem 0;
+            overflow: hidden;
+        }
+
+        .code-header {
+            background: var(--bg);
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .code-header .filename {
+            font-family: monospace;
+        }
+
+        .copy-btn {
+            background: var(--border);
+            border: none;
+            color: var(--text-muted);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .copy-btn.copied {
+            background: var(--success);
+            color: white;
+        }
+
+        pre {
+            padding: 1.5rem;
+            overflow-x: auto;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            color: #e2e8f0;
+        }
+
+        .keyword { color: #c084fc; }
+        .string { color: #86efac; }
+        .comment { color: #64748b; }
+        .type { color: #7dd3fc; }
+        .function { color: #fbbf24; }
+        .property { color: #fb7185; }
+
+        .info-box {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 0.5rem;
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .info-box.warning {
+            background: rgba(251, 191, 36, 0.1);
+            border-color: #fbbf24;
+        }
+
+        .info-box.success {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: var(--success);
+        }
+
+        .info-box strong {
+            color: var(--text);
+        }
+
+        .checklist {
+            list-style: none;
+            margin: 1rem 0;
+        }
+
+        .checklist li {
+            padding: 0.5rem 0;
+            padding-left: 2rem;
+            position: relative;
+            color: var(--text-muted);
+        }
+
+        .checklist li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg-secondary);
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        td {
+            color: var(--text-muted);
+        }
+
+        td code {
+            background: var(--bg);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+        }
+
+        .file-tree {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+
+        .file-tree .folder { color: #7dd3fc; }
+        .file-tree .file { color: var(--text-muted); }
+        .file-tree .new { color: var(--success); }
+
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .quick-start {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .quick-start-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            transition: border-color 0.2s;
+        }
+
+        .quick-start-item:hover {
+            border-color: var(--primary);
+        }
+
+        .quick-start-item h4 {
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quick-start-item p {
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        @media (max-width: 640px) {
+            header h1 {
+                font-size: 1.75rem;
+            }
+
+            nav ul {
+                gap: 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Adapty SDK Integration Guide</h1>
+        <p>In-App Subscriptions for iOS with SwiftUI & Paywall Builder</p>
+        <div>
+            <span class="badge">SDK 3.15+</span>
+            <span class="badge ios">iOS 15+</span>
+        </div>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#installation">Installation</a></li>
+            <li><a href="#initialization">Initialization</a></li>
+            <li><a href="#service">Subscription Manager</a></li>
+            <li><a href="#paywall">Paywall View</a></li>
+            <li><a href="#integration">Integration</a></li>
+            <li><a href="#testing">Testing</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        <!-- Quick Start -->
+        <section>
+            <h2>Quick Start</h2>
+            <p>Get subscriptions working in your iOS app in 6 steps.</p>
+
+            <div class="quick-start">
+                <div class="quick-start-item">
+                    <h4>1. Add SDK</h4>
+                    <p>Install Adapty & AdaptyUI via Swift Package Manager</p>
+                </div>
+                <div class="quick-start-item">
+                    <h4>2. Initialize</h4>
+                    <p>Activate SDK on app launch with your API key</p>
+                </div>
+                <div class="quick-start-item">
+                    <h4>3. Create Manager</h4>
+                    <p>Build a service to track subscription state</p>
+                </div>
+                <div class="quick-start-item">
+                    <h4>4. Build Paywall</h4>
+                    <p>Create paywall view with purchase handling</p>
+                </div>
+                <div class="quick-start-item">
+                    <h4>5. Integrate UI</h4>
+                    <p>Show paywall in onboarding & settings</p>
+                </div>
+                <div class="quick-start-item">
+                    <h4>6. Test</h4>
+                    <p>Verify with sandbox purchases</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Installation -->
+        <section id="installation">
+            <h2><span class="step">1</span> Installation</h2>
+            <p>Add the Adapty SDK to your iOS project using Swift Package Manager.</p>
+
+            <h3>Swift Package Manager</h3>
+            <ol style="color: var(--text-muted); padding-left: 1.5rem;">
+                <li>In Xcode, go to <strong>File → Add Package Dependencies</strong></li>
+                <li>Enter the repository URL:</li>
+            </ol>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="filename">Package URL</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code>https://github.com/adaptyteam/AdaptySDK-iOS.git</code></pre>
+            </div>
+
+            <ol start="3" style="color: var(--text-muted); padding-left: 1.5rem;">
+                <li>Select version <strong>3.15.0</strong> or later</li>
+                <li>Add both packages to your target:
+                    <ul style="margin-top: 0.5rem;">
+                        <li><strong>Adapty</strong> — Core SDK (required)</li>
+                        <li><strong>AdaptyUI</strong> — Paywall Builder support (required for visual paywalls)</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <div class="info-box">
+                <strong>Requirements:</strong> iOS 15.0+ for AdaptyUI and StoreKit 2 features. The core Adapty SDK supports iOS 13.0+.
+            </div>
+        </section>
+
+        <!-- Initialization -->
+        <section id="initialization">
+            <h2><span class="step">2</span> Initialization</h2>
+            <p>Initialize the Adapty SDK once at app launch, before accessing any subscription features.</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="filename">YourApp.swift</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code><span class="keyword">import</span> SwiftUI
+
+<span class="keyword">@main</span>
+<span class="keyword">struct</span> <span class="type">YourApp</span>: <span class="type">App</span> {
+    <span class="keyword">@StateObject private var</span> subscriptionManager = <span class="type">SubscriptionManager</span>.shared
+
+    <span class="keyword">var</span> body: <span class="keyword">some</span> <span class="type">Scene</span> {
+        <span class="type">WindowGroup</span> {
+            <span class="type">ContentView</span>()
+                .<span class="function">environmentObject</span>(subscriptionManager)
+                .<span class="function">task</span> {
+                    <span class="keyword">await</span> subscriptionManager.<span class="function">configure</span>()
+                }
+        }
+    }
+}</code></pre>
+            </div>
+
+            <div class="info-box warning">
+                <strong>Important:</strong> Get your <strong>Public SDK Key</strong> from Adapty Dashboard → Settings → API Keys. Never use the Secret Key in client-side code.
+            </div>
+        </section>
+
+        <!-- Subscription Manager -->
+        <section id="service">
+            <h2><span class="step">3</span> Subscription Manager</h2>
+            <p>Create a singleton manager to handle all subscription logic and state.</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="filename">SubscriptionManager.swift</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code><span class="keyword">import</span> Foundation
+<span class="keyword">import</span> Adapty
+<span class="keyword">import</span> AdaptyUI
+
+<span class="keyword">@MainActor</span>
+<span class="keyword">final class</span> <span class="type">SubscriptionManager</span>: <span class="type">ObservableObject</span> {
+    <span class="keyword">static let</span> shared = <span class="type">SubscriptionManager</span>()
+
+    <span class="comment">// MARK: - Published State</span>
+    <span class="keyword">@Published private(set) var</span> isPremium = <span class="keyword">false</span>
+    <span class="keyword">@Published private(set) var</span> isLoading = <span class="keyword">false</span>
+
+    <span class="comment">// MARK: - Configuration (Update these!)</span>
+    <span class="keyword">private let</span> apiKey = <span class="string">"YOUR_PUBLIC_SDK_KEY"</span>
+    <span class="keyword">private let</span> placementId = <span class="string">"YOUR_PLACEMENT_ID"</span>
+    <span class="keyword">private let</span> accessLevelId = <span class="string">"premium"</span>
+
+    <span class="keyword">private var</span> isConfigured = <span class="keyword">false</span>
+
+    <span class="keyword">private init</span>() {}
+
+    <span class="comment">// MARK: - SDK Configuration</span>
+    <span class="keyword">func</span> <span class="function">configure</span>() <span class="keyword">async</span> {
+        <span class="keyword">guard</span> !isConfigured <span class="keyword">else</span> { <span class="keyword">return</span> }
+
+        <span class="keyword">do</span> {
+            <span class="keyword">let</span> config = <span class="type">AdaptyConfiguration</span>
+                .<span class="function">builder</span>(withAPIKey: apiKey)
+                .<span class="function">with</span>(observerMode: <span class="keyword">false</span>)
+                .<span class="function">build</span>()
+
+            <span class="keyword">#if</span> DEBUG
+            <span class="type">Adapty</span>.logLevel = .verbose
+            <span class="keyword">#endif</span>
+
+            <span class="keyword">try await</span> <span class="type">Adapty</span>.<span class="function">activate</span>(with: config)
+            <span class="keyword">try await</span> <span class="type">AdaptyUI</span>.<span class="function">activate</span>()
+
+            isConfigured = <span class="keyword">true</span>
+            <span class="keyword">await</span> <span class="function">refreshPremiumStatus</span>()
+        } <span class="keyword">catch</span> {
+            <span class="function">print</span>(<span class="string">"[Adapty] Configuration failed: \(error)"</span>)
+        }
+    }
+
+    <span class="comment">// MARK: - Premium Status</span>
+    <span class="keyword">func</span> <span class="function">refreshPremiumStatus</span>() <span class="keyword">async</span> {
+        <span class="keyword">do</span> {
+            <span class="keyword">let</span> profile = <span class="keyword">try await</span> <span class="type">Adapty</span>.<span class="function">getProfile</span>()
+            isPremium = profile.accessLevels[accessLevelId]?.<span class="property">isActive</span> ?? <span class="keyword">false</span>
+        } <span class="keyword">catch</span> {
+            <span class="function">print</span>(<span class="string">"[Adapty] Failed to get profile: \(error)"</span>)
+        }
+    }
+
+    <span class="comment">// MARK: - Paywall Configuration</span>
+    <span class="keyword">func</span> <span class="function">getPaywallConfiguration</span>() <span class="keyword">async throws</span> -> <span class="type">AdaptyUI.PaywallConfiguration</span> {
+        <span class="keyword">let</span> paywall = <span class="keyword">try await</span> <span class="type">Adapty</span>.<span class="function">getPaywall</span>(placementId: placementId)
+
+        <span class="keyword">guard</span> paywall.<span class="property">hasViewConfiguration</span> <span class="keyword">else</span> {
+            <span class="keyword">throw</span> <span class="type">SubscriptionError</span>.noViewConfiguration
+        }
+
+        <span class="keyword">let</span> products = <span class="keyword">try await</span> <span class="type">Adapty</span>.<span class="function">getPaywallProducts</span>(paywall: paywall)
+        <span class="keyword">return try await</span> <span class="type">AdaptyUI</span>.<span class="function">getPaywallConfiguration</span>(
+            forPaywall: paywall,
+            products: products
+        )
+    }
+
+    <span class="comment">// MARK: - Restore Purchases</span>
+    <span class="keyword">func</span> <span class="function">restorePurchases</span>() <span class="keyword">async throws</span> -> <span class="type">Bool</span> {
+        isLoading = <span class="keyword">true</span>
+        <span class="keyword">defer</span> { isLoading = <span class="keyword">false</span> }
+
+        <span class="keyword">let</span> profile = <span class="keyword">try await</span> <span class="type">Adapty</span>.<span class="function">restorePurchases</span>()
+        isPremium = profile.accessLevels[accessLevelId]?.<span class="property">isActive</span> ?? <span class="keyword">false</span>
+        <span class="keyword">return</span> isPremium
+    }
+}
+
+<span class="comment">// MARK: - Errors</span>
+<span class="keyword">enum</span> <span class="type">SubscriptionError</span>: <span class="type">LocalizedError</span> {
+    <span class="keyword">case</span> noViewConfiguration
+
+    <span class="keyword">var</span> errorDescription: <span class="type">String</span>? {
+        <span class="keyword">switch self</span> {
+        <span class="keyword">case</span> .noViewConfiguration:
+            <span class="keyword">return</span> <span class="string">"Paywall has no view configuration. Enable 'Show on device' in Adapty Dashboard."</span>
+        }
+    }
+}</code></pre>
+            </div>
+
+            <h3>Configuration Values</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th>Description</th>
+                        <th>Where to Find</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>apiKey</code></td>
+                        <td>Your Adapty Public SDK Key</td>
+                        <td>Dashboard → Settings → API Keys</td>
+                    </tr>
+                    <tr>
+                        <td><code>placementId</code></td>
+                        <td>Identifier for your paywall placement</td>
+                        <td>Dashboard → Placements</td>
+                    </tr>
+                    <tr>
+                        <td><code>accessLevelId</code></td>
+                        <td>Access level granted after purchase</td>
+                        <td>Dashboard → Access Levels</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Paywall View -->
+        <section id="paywall">
+            <h2><span class="step">4</span> Paywall View</h2>
+            <p>Create a SwiftUI view that displays the Adapty Paywall Builder paywall.</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="filename">AdaptyPaywallView.swift</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code><span class="keyword">import</span> SwiftUI
+<span class="keyword">import</span> Adapty
+<span class="keyword">import</span> AdaptyUI
+
+<span class="keyword">struct</span> <span class="type">AdaptyPaywallView</span>: <span class="type">View</span> {
+    <span class="keyword">@Binding var</span> isPresented: <span class="type">Bool</span>
+    <span class="keyword">var</span> onPurchaseComplete: (() -> <span class="type">Void</span>)?
+    <span class="keyword">var</span> onDismiss: (() -> <span class="type">Void</span>)?
+
+    <span class="keyword">@StateObject private var</span> manager = <span class="type">SubscriptionManager</span>.shared
+    <span class="keyword">@State private var</span> paywallConfig: <span class="type">AdaptyUI.PaywallConfiguration</span>?
+    <span class="keyword">@State private var</span> isLoading = <span class="keyword">true</span>
+    <span class="keyword">@State private var</span> error: <span class="type">Error</span>?
+
+    <span class="keyword">var</span> body: <span class="keyword">some</span> <span class="type">View</span> {
+        <span class="type">Group</span> {
+            <span class="keyword">if</span> isLoading {
+                <span class="type">ProgressView</span>(<span class="string">"Loading..."</span>)
+                    .<span class="function">frame</span>(maxWidth: .infinity, maxHeight: .infinity)
+            } <span class="keyword">else if let</span> error {
+                <span class="function">errorView</span>(error)
+            } <span class="keyword">else if let</span> config = paywallConfig {
+                <span class="function">paywallContent</span>(config)
+            }
+        }
+        .<span class="function">background</span>(<span class="type">Color</span>(.<span class="property">systemBackground</span>))
+        .<span class="function">task</span> { <span class="keyword">await</span> <span class="function">loadPaywall</span>() }
+    }
+
+    <span class="comment">// MARK: - Error View</span>
+    <span class="keyword">private func</span> <span class="function">errorView</span>(_ error: <span class="type">Error</span>) -> <span class="keyword">some</span> <span class="type">View</span> {
+        <span class="type">VStack</span>(spacing: 16) {
+            <span class="type">Image</span>(systemName: <span class="string">"exclamationmark.triangle"</span>)
+                .<span class="function">font</span>(.largeTitle)
+                .<span class="function">foregroundColor</span>(.orange)
+            <span class="type">Text</span>(<span class="string">"Unable to load"</span>)
+                .<span class="function">font</span>(.headline)
+            <span class="type">Text</span>(error.localizedDescription)
+                .<span class="function">font</span>(.caption)
+                .<span class="function">foregroundColor</span>(.secondary)
+            <span class="type">HStack</span> {
+                <span class="type">Button</span>(<span class="string">"Retry"</span>) {
+                    <span class="type">Task</span> { <span class="keyword">await</span> <span class="function">loadPaywall</span>() }
+                }
+                .<span class="function">buttonStyle</span>(.borderedProminent)
+                <span class="type">Button</span>(<span class="string">"Close"</span>) { <span class="function">dismiss</span>() }
+                .<span class="function">buttonStyle</span>(.bordered)
+            }
+        }
+        .<span class="function">padding</span>()
+    }
+
+    <span class="comment">// MARK: - Paywall Content</span>
+    <span class="keyword">private func</span> <span class="function">paywallContent</span>(_ config: <span class="type">AdaptyUI.PaywallConfiguration</span>) -> <span class="keyword">some</span> <span class="type">View</span> {
+        <span class="type">Color</span>.clear
+            .<span class="function">paywall</span>(
+                isPresented: $isPresented,
+                paywallConfiguration: config,
+                didPerformAction: { action <span class="keyword">in</span>
+                    <span class="keyword">if case</span> .close = action { <span class="function">dismiss</span>() }
+                },
+                didFinishPurchase: { _, result <span class="keyword">in</span>
+                    <span class="function">handlePurchase</span>(result)
+                },
+                didFailPurchase: { _, error <span class="keyword">in</span>
+                    <span class="function">print</span>(<span class="string">"Purchase failed: \(error)"</span>)
+                },
+                didFinishRestore: { _ <span class="keyword">in</span>
+                    <span class="type">Task</span> {
+                        <span class="keyword">await</span> manager.<span class="function">refreshPremiumStatus</span>()
+                        <span class="keyword">if</span> manager.isPremium {
+                            onPurchaseComplete?()
+                            <span class="function">dismiss</span>()
+                        }
+                    }
+                },
+                didFailRestore: { error <span class="keyword">in</span>
+                    <span class="function">print</span>(<span class="string">"Restore failed: \(error)"</span>)
+                },
+                didFailRendering: { _ <span class="keyword">in</span> <span class="function">dismiss</span>() }
+            )
+    }
+
+    <span class="comment">// MARK: - Actions</span>
+    <span class="keyword">private func</span> <span class="function">loadPaywall</span>() <span class="keyword">async</span> {
+        isLoading = <span class="keyword">true</span>
+        error = <span class="keyword">nil</span>
+        <span class="keyword">do</span> {
+            paywallConfig = <span class="keyword">try await</span> manager.<span class="function">getPaywallConfiguration</span>()
+        } <span class="keyword">catch</span> {
+            <span class="keyword">self</span>.error = error
+        }
+        isLoading = <span class="keyword">false</span>
+    }
+
+    <span class="keyword">private func</span> <span class="function">handlePurchase</span>(_ result: <span class="type">AdaptyPurchaseResult</span>) {
+        <span class="keyword">switch</span> result {
+        <span class="keyword">case</span> .userCancelled:
+            <span class="keyword">break</span>
+        <span class="keyword">case</span> .pending:
+            <span class="function">print</span>(<span class="string">"Purchase pending approval"</span>)
+        <span class="keyword">case</span> .success:
+            <span class="type">Task</span> { <span class="keyword">await</span> manager.<span class="function">refreshPremiumStatus</span>() }
+            onPurchaseComplete?()
+            <span class="function">dismiss</span>()
+        }
+    }
+
+    <span class="keyword">private func</span> <span class="function">dismiss</span>() {
+        isPresented = <span class="keyword">false</span>
+        onDismiss?()
+    }
+}</code></pre>
+            </div>
+
+            <h3>Paywall Callbacks</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Callback</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>didPerformAction</code></td>
+                        <td>No</td>
+                        <td>Handle close, URL opens, custom button actions</td>
+                    </tr>
+                    <tr>
+                        <td><code>didFinishPurchase</code></td>
+                        <td>No</td>
+                        <td>Called with <code>AdaptyPurchaseResult</code> (.success, .pending, .userCancelled)</td>
+                    </tr>
+                    <tr>
+                        <td><code>didFailPurchase</code></td>
+                        <td>Yes</td>
+                        <td>Handle purchase errors</td>
+                    </tr>
+                    <tr>
+                        <td><code>didFinishRestore</code></td>
+                        <td>Yes</td>
+                        <td>Called with <code>AdaptyProfile</code> after successful restore</td>
+                    </tr>
+                    <tr>
+                        <td><code>didFailRestore</code></td>
+                        <td>Yes</td>
+                        <td>Handle restore errors</td>
+                    </tr>
+                    <tr>
+                        <td><code>didFailRendering</code></td>
+                        <td>Yes</td>
+                        <td>Handle paywall rendering errors</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- UI Integration -->
+        <section id="integration">
+            <h2><span class="step">5</span> UI Integration</h2>
+            <p>Show the paywall at key points in your app's user flow.</p>
+
+            <h3>After Onboarding</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="filename">ContentView.swift</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code><span class="keyword">struct</span> <span class="type">ContentView</span>: <span class="type">View</span> {
+    <span class="keyword">@EnvironmentObject var</span> subscriptionManager: <span class="type">SubscriptionManager</span>
+    <span class="keyword">@AppStorage</span>(<span class="string">"hasCompletedOnboarding"</span>) <span class="keyword">private var</span> hasCompletedOnboarding = <span class="keyword">false</span>
+    <span class="keyword">@State private var</span> showPaywall = <span class="keyword">false</span>
+
+    <span class="keyword">var</span> body: <span class="keyword">some</span> <span class="type">View</span> {
+        <span class="type">Group</span> {
+            <span class="keyword">if</span> !hasCompletedOnboarding {
+                <span class="type">OnboardingView</span> {
+                    hasCompletedOnboarding = <span class="keyword">true</span>
+                    <span class="comment">// Show paywall if not premium</span>
+                    <span class="keyword">if</span> !subscriptionManager.isPremium {
+                        showPaywall = <span class="keyword">true</span>
+                    }
+                }
+            } <span class="keyword">else</span> {
+                <span class="type">MainView</span>()
+            }
+        }
+        .<span class="function">fullScreenCover</span>(isPresented: $showPaywall) {
+            <span class="type">AdaptyPaywallView</span>(isPresented: $showPaywall)
+        }
+    }
+}</code></pre>
+            </div>
+
+            <h3>In Settings</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="filename">SettingsView.swift</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code><span class="keyword">struct</span> <span class="type">SettingsView</span>: <span class="type">View</span> {
+    <span class="keyword">@StateObject private var</span> manager = <span class="type">SubscriptionManager</span>.shared
+    <span class="keyword">@State private var</span> showPaywall = <span class="keyword">false</span>
+    <span class="keyword">@State private var</span> isRestoring = <span class="keyword">false</span>
+    <span class="keyword">@State private var</span> showAlert = <span class="keyword">false</span>
+    <span class="keyword">@State private var</span> alertMessage = <span class="string">""</span>
+
+    <span class="keyword">var</span> body: <span class="keyword">some</span> <span class="type">View</span> {
+        <span class="type">List</span> {
+            <span class="type">Section</span>(<span class="string">"Subscription"</span>) {
+                <span class="keyword">if</span> manager.isPremium {
+                    <span class="type">Label</span>(<span class="string">"Premium Active"</span>, systemImage: <span class="string">"crown.fill"</span>)
+                        .<span class="function">foregroundColor</span>(.orange)
+
+                    <span class="type">Link</span>(destination: <span class="type">URL</span>(string: <span class="string">"https://apps.apple.com/account/subscriptions"</span>)!) {
+                        <span class="type">Label</span>(<span class="string">"Manage Subscription"</span>, systemImage: <span class="string">"creditcard"</span>)
+                    }
+                } <span class="keyword">else</span> {
+                    <span class="type">Button</span> {
+                        showPaywall = <span class="keyword">true</span>
+                    } label: {
+                        <span class="type">Label</span>(<span class="string">"Upgrade to Premium"</span>, systemImage: <span class="string">"crown"</span>)
+                    }
+
+                    <span class="type">Button</span> {
+                        <span class="function">restore</span>()
+                    } label: {
+                        <span class="type">HStack</span> {
+                            <span class="type">Label</span>(<span class="string">"Restore Purchases"</span>, systemImage: <span class="string">"arrow.clockwise"</span>)
+                            <span class="keyword">if</span> isRestoring {
+                                <span class="type">Spacer</span>()
+                                <span class="type">ProgressView</span>()
+                            }
+                        }
+                    }
+                    .<span class="function">disabled</span>(isRestoring)
+                }
+            }
+        }
+        .<span class="function">fullScreenCover</span>(isPresented: $showPaywall) {
+            <span class="type">AdaptyPaywallView</span>(isPresented: $showPaywall)
+        }
+        .<span class="function">alert</span>(<span class="string">"Restore"</span>, isPresented: $showAlert) {
+            <span class="type">Button</span>(<span class="string">"OK"</span>, role: .cancel) {}
+        } message: {
+            <span class="type">Text</span>(alertMessage)
+        }
+    }
+
+    <span class="keyword">private func</span> <span class="function">restore</span>() {
+        isRestoring = <span class="keyword">true</span>
+        <span class="type">Task</span> {
+            <span class="keyword">do</span> {
+                <span class="keyword">let</span> restored = <span class="keyword">try await</span> manager.<span class="function">restorePurchases</span>()
+                alertMessage = restored
+                    ? <span class="string">"Subscription restored!"</span>
+                    : <span class="string">"No purchases to restore."</span>
+            } <span class="keyword">catch</span> {
+                alertMessage = <span class="string">"Restore failed: \(error.localizedDescription)"</span>
+            }
+            isRestoring = <span class="keyword">false</span>
+            showAlert = <span class="keyword">true</span>
+        }
+    }
+}</code></pre>
+            </div>
+
+            <h3>Project Structure</h3>
+            <div class="file-tree">
+<span class="folder">YourApp/</span>
+├── <span class="file">YourApp.swift</span>
+├── <span class="folder">Managers/</span>
+│   └── <span class="file">SubscriptionManager.swift</span> <span class="new">(new)</span>
+├── <span class="folder">Views/</span>
+│   ├── <span class="file">ContentView.swift</span>
+│   ├── <span class="file">SettingsView.swift</span>
+│   └── <span class="file">AdaptyPaywallView.swift</span> <span class="new">(new)</span>
+└── ...
+            </div>
+        </section>
+
+        <!-- Testing -->
+        <section id="testing">
+            <h2><span class="step">6</span> Testing</h2>
+            <p>Verify your integration using sandbox testing before going live.</p>
+
+            <h3>Adapty Dashboard Setup</h3>
+            <ul class="checklist">
+                <li>Products configured with App Store Connect</li>
+                <li>Access level created (e.g., "premium")</li>
+                <li>Placement created with your placement ID</li>
+                <li>Paywall designed in Paywall Builder</li>
+                <li><strong>"Show on device"</strong> toggle enabled for paywall</li>
+            </ul>
+
+            <h3>Sandbox Testing</h3>
+            <ol style="color: var(--text-muted); padding-left: 1.5rem;">
+                <li>Create a Sandbox Apple ID in App Store Connect → Users and Access → Sandbox</li>
+                <li>On your test device, sign out of your regular Apple ID (Settings → App Store)</li>
+                <li>Run your app and trigger a purchase</li>
+                <li>Sign in with the Sandbox account when prompted</li>
+                <li>Complete the purchase and verify premium status activates</li>
+            </ol>
+
+            <h3>Verification Checklist</h3>
+            <ul class="checklist">
+                <li>App builds successfully with Adapty packages</li>
+                <li>Console shows "Adapty activated" on launch (verbose mode)</li>
+                <li>Paywall loads and displays correctly</li>
+                <li>Products show with correct prices</li>
+                <li>Purchase flow completes successfully</li>
+                <li><code>isPremium</code> becomes <code>true</code> after purchase</li>
+                <li>Restore purchases works correctly</li>
+                <li>Paywall close button dismisses properly</li>
+            </ul>
+
+            <div class="info-box success">
+                <strong>Tip:</strong> Enable verbose logging during development with <code>Adapty.logLevel = .verbose</code> to debug any issues.
+            </div>
+        </section>
+
+        <!-- Troubleshooting -->
+        <section>
+            <h2>Troubleshooting</h2>
+
+            <h3>Common Issues</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Issue</th>
+                        <th>Solution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Paywall won't load</td>
+                        <td>Ensure "Show on device" is enabled in Adapty Dashboard for your paywall</td>
+                    </tr>
+                    <tr>
+                        <td>Products not showing</td>
+                        <td>Verify products are configured in App Store Connect and linked in Adapty</td>
+                    </tr>
+                    <tr>
+                        <td>Purchase fails silently</td>
+                        <td>Check you're using a valid Sandbox account and device is signed out of production App Store</td>
+                    </tr>
+                    <tr>
+                        <td><code>hasViewConfiguration</code> is false</td>
+                        <td>Create a paywall using Paywall Builder and enable "Show on device"</td>
+                    </tr>
+                    <tr>
+                        <td>Premium status not updating</td>
+                        <td>Call <code>refreshPremiumStatus()</code> after purchase/restore completes</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer>
+        <p>
+            <a href="https://adapty.io/docs" target="_blank">Adapty Documentation</a> ·
+            <a href="https://github.com/adaptyteam/AdaptySDK-iOS" target="_blank">GitHub</a> ·
+            <a href="https://adapty.io" target="_blank">Adapty.io</a>
+        </p>
+        <p style="margin-top: 1rem; color: var(--border);">Last updated: February 2025 · SDK 3.15+</p>
+    </footer>
+
+    <script>
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block');
+            const code = codeBlock.querySelector('code').innerText;
+
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                    button.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
